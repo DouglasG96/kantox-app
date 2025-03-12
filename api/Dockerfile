@@ -14,4 +14,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Command to run the application
-CMD ["python", "api/main_api.py"]
+CMD ["python", "main_api.py"]
+EXPOSE 5000
