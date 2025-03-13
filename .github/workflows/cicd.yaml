@@ -26,7 +26,7 @@ jobs:
 
       - name: Build and push API Docker image
         run: |
-          docker build -t ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPOSITORY_API }}:latest ./api
+          docker build -t ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPOSITORY_API }}:latest .
           docker push ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPOSITORY_API }}:latest
 
 
