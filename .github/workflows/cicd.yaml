@@ -32,27 +32,27 @@ jobs:
       - name: Clone kantox-k8s repository
         run: |
           git clone https://github.com/douglasg96/kantox-k8s.git
-          cd main-api
+          cd kantox-k8s/main-api
           git config --global user.name "GitHub Actions"
           git config --global user.email "drg96@gmail.com"
   
       - name: Update ConfigMap version
         run: |
           # Extract the current version
-          CURRENT_VERSION=$(cat main-api/configmap.yaml | grep MAIN_API_VERSION | awk '{print $2}' | tr -d '"')
+          CURRENT_VERSION=$(cat kantox-k8s/main-api/configmap.yaml | grep MAIN_API_VERSION | awk '{print $2}' | tr -d '"')
           
           # Increment the patch version
           NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1"."$2"."$3+1}')
           
           # Update the ConfigMap with the new version
-          sed -i "s|MAIN_API_VERSION:.*|MAIN_API_VERSION: \"$NEW_VERSION\"|g" main-api/configmap.yaml
+          sed -i "s|MAIN_API_VERSION:.*|MAIN_API_VERSION: \"$NEW_VERSION\"|g" kantox-k8s/main-api/configmap.yaml
           
           # Print the new version for debugging
           echo "Updated MAIN_API_VERSION to $NEW_VERSION"
 
       - name: Commit and push changes
         run: |
-          cd main-api
-          git add main-api/configmap.yaml
+          cd kantox-k8s/main-api
+          git add configmap.yaml
           git commit -m "Update MAIN_API_VERSION to $NEW_VERSION"
           git push https://${{ secrets.GH_TOKEN }}@github.com/douglasg96/kantox-k8s.git HEAD:main
