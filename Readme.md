@@ -96,6 +96,70 @@ Expected response:
 ---
 
 
+## 📦 GitHub Actions Workflow Definition
+
+This project includes a GitHub Actions workflow to automate the build, push, and deployment of the **Main API** using ArgoCD and Kubernetes.
+
+### 🚀 CI/CD Pipeline Overview
+
+- **Build and Push Docker Image:**
+  - Logs in to Docker Hub
+  - Builds and pushes the Docker image
+
+- **Deploy with ArgoCD:**
+  - Clones the `kantox-k8s` repository
+  - Updates the ConfigMap with a new version
+  - Pushes the updated ConfigMap to trigger an ArgoCD deployment
+
+### 🔧 GitHub Actions Workflow Steps
+
+#### 1. **Build and Push Docker Image**
+```yaml
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin ${{ env.DOCKER_REGISTRY }}
+
+      - name: Build and push API Docker image
+        run: |
+          docker build -t ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPOSITORY_API }}:latest .
+          docker push ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPOSITORY_API }}:latest
+```
+
+#### 2. **Deploy with ArgoCD**
+```yaml
+  deploywithargocd:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: Clone kantox-k8s repository
+        run: |
+          git clone https://github.com/douglasg96/kantox-k8s.git
+          cd kantox-k8s/main-api
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "drg96@gmail.com"
+
+      - name: Update ConfigMap version
+        run: |
+          CURRENT_VERSION=$(cat kantox-k8s/main-api/configmap.yaml | grep MAIN_API_VERSION | awk '{print $2}' | tr -d '"')
+          NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1"."$2"."$3+1}')
+          sed -i "s|MAIN_API_VERSION:.*|MAIN_API_VERSION: \"$NEW_VERSION\"|g" kantox-k8s/main-api/configmap.yaml
+          echo "Updated MAIN_API_VERSION to $NEW_VERSION"
+
+      - name: Commit and push changes
+        run: |
+          cd kantox-k8s/main-api
+          git add configmap.yaml
+          git commit -m "Update MAIN_API_VERSION to $NEW_VERSION"
+          git push https://${{ secrets.GH_TOKEN }}@github.com/douglasg96/kantox-k8s.git HEAD:main
+```
+---
+
 ## 🙏 Acknowledgments
 
 - [Python Documentation](https://docs.python.org/3/)
